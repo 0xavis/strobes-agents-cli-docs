@@ -2,91 +2,134 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
+<script>(function(){try{var s=localStorage.getItem('theme');var l=window.matchMedia&&matchMedia('(prefers-color-scheme: light)').matches;document.documentElement.setAttribute('data-theme',s||(l?'light':'dark'));}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Strobes Agents CLI — terminal client for Strobes Agents AI</title>
-<meta name="description" content="strobes — a local, terminal-native client for Strobes Agents AI. Multi-tenant, live credits, local shell + browser sandbox, cross-platform." />
+<meta name="description" content="strobes — a local, terminal-native client for Strobes Agents AI. Multi-tenant, live credits, local shell + browser sandbox, auto-reconnect, self-update. macOS, Linux, Windows." />
+<meta property="og:title" content="Strobes Agents CLI" />
+<meta property="og:description" content="Claude Code, but for your Strobes pentest agents — a terminal client that runs the shell & browser sandbox on your machine." />
+<link rel="icon" href="https://strobes.co/strobes-icon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
 <style>
   :root{
-    --bg:#0b0f14; --panel:#11161d; --panel2:#0e1319; --line:#1e2935;
-    --txt:#cbd5e1; --dim:#7c8a9a; --head:#e6edf3;
-    --cyan:#34d3ee; --green:#37d399; --mag:#c084fc; --yellow:#f5c451;
-    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
-    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --navy:#0b2545; /* Strobes deep blue */
+  }
+  /* ---- dark ---- */
+  html[data-theme="dark"]{
+    --bg:#08111e; --bg2:#0c1a2e; --panel:#0f2036; --panel2:#0b1828; --line:#1c3252;
+    --txt:#c2d2e4; --dim:#7790ab; --head:#eaf2fb;
+    --cyan:#2bd4d4; --green:#3ad29b; --mag:#7aa7ff; --yellow:#f5c451;
+    --code:#d7e6f5; --shadow:0 0 22px rgba(43,212,212,.22);
+    --hero:radial-gradient(1200px 620px at 72% -12%,#10314f 0,var(--bg) 58%);
+    --btnfg:#04121a;
+  }
+  /* ---- light (Strobes-style, default) ---- */
+  html[data-theme="light"]{
+    --bg:#f5f8fc; --bg2:#eaf0f8; --panel:#ffffff; --panel2:#f3f7fc; --line:#dde7f1;
+    --txt:#1f2d3d; --dim:#5a6b7e; --head:#0b2545;
+    --cyan:#0e9bb8; --green:#13936a; --mag:#3a5ccc; --yellow:#a9790f;
+    --code:#16273a; --shadow:none;
+    --hero:linear-gradient(180deg,#eef4fb 0,var(--bg) 280px);
+    --btnfg:#ffffff;
   }
   *{box-sizing:border-box}
   html{scroll-behavior:smooth}
-  body{margin:0;background:radial-gradient(1200px 600px at 70% -10%,#0f1822 0,var(--bg) 60%);color:var(--txt);font-family:var(--sans);line-height:1.6;font-size:16px}
+  body{margin:0;background:var(--hero);color:var(--txt);font-family:var(--sans);line-height:1.65;font-size:16px;transition:background .25s,color .25s}
   a{color:var(--cyan);text-decoration:none}
   a:hover{text-decoration:underline}
   code,pre,kbd{font-family:var(--mono)}
   .wrap{max-width:1120px;margin:0 auto;padding:0 22px}
-  header.top{position:sticky;top:0;z-index:30;background:rgba(11,15,20,.82);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  header.top{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
   header.top .wrap{display:flex;align-items:center;gap:18px;height:58px}
   .brand{font-family:var(--mono);font-weight:700;color:var(--head);letter-spacing:.5px}
   .brand b{color:var(--cyan)}
-  nav.links{margin-left:auto;display:flex;gap:18px;flex-wrap:wrap}
+  nav.links{margin-left:auto;display:flex;gap:18px;flex-wrap:wrap;align-items:center}
   nav.links a{color:var(--dim);font-size:14px}
   nav.links a:hover{color:var(--head);text-decoration:none}
-  .hero{padding:54px 0 26px;border-bottom:1px solid var(--line)}
-  .ascii{font-family:var(--mono);color:var(--cyan);font-size:12px;line-height:1.15;white-space:pre;overflow-x:auto;margin:0 0 6px;text-shadow:0 0 18px rgba(52,211,238,.25)}
+  #themebtn{cursor:pointer;background:var(--panel);border:1px solid var(--line);color:var(--head);border-radius:8px;width:34px;height:32px;font-size:15px;line-height:1;display:inline-flex;align-items:center;justify-content:center}
+  #themebtn:hover{border-color:var(--cyan)}
+  @media(max-width:720px){nav.links a:not(.gh){display:none}}
+  .hero{padding:54px 0 30px;border-bottom:1px solid var(--line)}
+  .ascii{font-family:var(--mono);color:var(--cyan);font-size:12px;line-height:1.15;white-space:pre;overflow-x:auto;margin:0 0 6px;text-shadow:var(--shadow)}
   .ascii .sub{color:var(--green)}
-  .tag{font-size:20px;color:var(--head);margin:14px 0 6px;font-weight:600}
-  .lede{color:var(--dim);max-width:760px}
+  .tag{font-size:21px;color:var(--head);margin:16px 0 6px;font-weight:700}
+  .lede{color:var(--dim);max-width:780px;font-size:16.5px}
   .cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:22px;align-items:center}
-  .btn{display:inline-block;background:var(--cyan);color:#04121a;font-weight:700;padding:10px 16px;border-radius:8px;font-size:14px}
+  .btn{display:inline-block;background:var(--cyan);color:var(--btnfg);font-weight:700;padding:10px 17px;border-radius:8px;font-size:14px}
+  html[data-theme="light"] .btn{background:var(--navy)}
   .btn:hover{text-decoration:none;filter:brightness(1.08)}
+  .logo{height:24px;width:24px;border-radius:6px;vertical-align:middle}
+  .logo-hero{height:40px;width:40px;border-radius:9px;box-shadow:0 4px 18px rgba(11,37,69,.18)}
   .btn.ghost{background:transparent;color:var(--txt);border:1px solid var(--line)}
-  .badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+  .badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px}
   .badge{font-family:var(--mono);font-size:12px;color:var(--dim);border:1px solid var(--line);border-radius:999px;padding:3px 10px;background:var(--panel2)}
-  section{padding:44px 0;border-bottom:1px solid var(--line)}
-  h2{color:var(--head);font-size:24px;margin:0 0 6px;letter-spacing:.2px}
-  h2 .hash{color:var(--cyan);opacity:.6;font-family:var(--mono)}
-  h3{color:var(--head);font-size:17px;margin:26px 0 8px}
+  section{padding:46px 0;border-bottom:1px solid var(--line)}
+  h2{color:var(--head);font-size:25px;margin:0 0 8px;letter-spacing:.2px}
+  h2 .hash{color:var(--cyan);opacity:.55;font-family:var(--mono)}
+  h3{color:var(--head);font-size:18px;margin:28px 0 8px}
   .muted{color:var(--dim)}
-  pre.code{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--cyan);border-radius:10px;padding:14px 16px;overflow-x:auto;font-size:13.5px;color:#dbe6f0}
+  p{margin:10px 0}
+  pre.code{position:relative;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--cyan);border-radius:10px;padding:14px 16px;overflow-x:auto;font-size:13.5px;color:var(--code);margin:12px 0}
   pre.code .c{color:var(--dim)}
   pre.code .p{color:var(--green)}
-  pre.code .k{color:var(--mag)}
+  .copybtn{position:absolute;top:8px;right:8px;cursor:pointer;font-family:var(--sans);font-size:11.5px;font-weight:600;color:var(--dim);background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:3px 9px;opacity:.55;transition:opacity .15s,color .15s,border-color .15s}
+  pre.code:hover .copybtn{opacity:1}
+  .copybtn:hover{color:var(--cyan);border-color:var(--cyan)}
+  .copybtn.ok{color:var(--green);border-color:var(--green);opacity:1}
   code.inl{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:13px;color:var(--cyan)}
   .grid{display:grid;gap:16px}
-  .g2{grid-template-columns:repeat(2,1fr)}
-  .g3{grid-template-columns:repeat(3,1fr)}
+  .g2{grid-template-columns:repeat(2,1fr)} .g3{grid-template-columns:repeat(3,1fr)}
   @media(max-width:820px){.g2,.g3{grid-template-columns:1fr}}
   .card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:12px;padding:18px}
   .card h4{margin:0 0 6px;color:var(--head);font-size:15px;display:flex;align-items:center;gap:8px}
   .card .ic{color:var(--cyan)}
   .card p{margin:0;color:var(--dim);font-size:14px}
-  table{width:100%;border-collapse:collapse;font-size:14px;margin-top:8px}
+  table{width:100%;border-collapse:collapse;font-size:14px;margin-top:10px}
   th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
   th{color:var(--dim);font-weight:600;font-size:12.5px;text-transform:uppercase;letter-spacing:.4px}
   td code{color:var(--cyan)}
   kbd{background:var(--panel);border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:1px 7px;font-size:12.5px;color:var(--head)}
-  .pill{display:inline-block;font-family:var(--mono);font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--green);background:rgba(55,211,153,.08)}
-  .two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-  @media(max-width:820px){.two{grid-template-columns:1fr}}
+  .feat{padding:26px 0;border-top:1px solid var(--line)}
+  .feat:first-of-type{border-top:0}
+  .feat .lbl{font-family:var(--mono);font-size:12px;color:var(--green);letter-spacing:.5px;text-transform:uppercase}
+  .feat h3{margin:6px 0 8px;font-size:20px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+  @media(max-width:860px){.two{grid-template-columns:1fr}}
+  .pill{display:inline-block;font-family:var(--mono);font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--green);background:color-mix(in srgb,var(--green) 10%,transparent)}
   .diagram{font-family:var(--mono);font-size:12.5px;color:var(--txt);white-space:pre;overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
-  footer{padding:40px 0;color:var(--dim);font-size:13px}
+  .note{border:1px solid var(--line);border-left:3px solid var(--yellow);background:color-mix(in srgb,var(--yellow) 8%,transparent);border-radius:8px;padding:12px 14px;color:var(--txt);font-size:14px;margin:14px 0}
   .anchor{position:relative;top:-66px;visibility:hidden}
-  .note{border:1px solid var(--line);border-left:3px solid var(--yellow);background:rgba(245,196,81,.06);border-radius:8px;padding:12px 14px;color:var(--txt);font-size:14px}
+  footer{padding:42px 0;color:var(--dim);font-size:13px}
+  ul.ticks{list-style:none;padding:0;margin:10px 0}
+  ul.ticks li{padding:4px 0 4px 24px;position:relative;color:var(--txt)}
+  ul.ticks li::before{content:"›";position:absolute;left:6px;color:var(--cyan);font-weight:700}
 </style>
 </head>
 <body>
 
 <header class="top"><div class="wrap">
-  <span class="brand"><b>◆</b> strobes <span class="muted" style="font-weight:400">agents cli</span></span>
+  <span class="brand"><img class="logo" src="https://strobes.co/strobes-icon.png" alt="Strobes" onerror="this.style.display='none'"/> Strobes <span class="muted" style="font-weight:400">Agents CLI</span></span>
   <nav class="links">
     <a href="#install">Install</a>
-    <a href="#quickstart">Quick start</a>
     <a href="#commands">Commands</a>
-    <a href="#keys">Keys</a>
     <a href="#features">Features</a>
     <a href="#tools">Tools</a>
     <a href="#config">Config</a>
-    <a href="https://github.com/strobes-co/strobes-agents-cli">GitHub ↗</a>
+    <a class="gh" href="https://github.com/strobes-co/strobes-agents-cli">GitHub ↗</a>
+    <button id="themebtn" title="Toggle theme" aria-label="Toggle theme">☀</button>
   </nav>
 </div></header>
 
 <div class="hero"><div class="wrap">
+<div style="display:flex;align-items:center;gap:11px;margin-bottom:20px">
+  <img class="logo-hero" src="https://strobes.co/strobes-icon.png" alt="Strobes" onerror="this.style.display='none'"/>
+  <span style="font-size:23px;font-weight:800;color:var(--head);letter-spacing:-.2px">Strobes</span>
+  <span class="badge" style="margin-left:2px">Agents CLI</span>
+</div>
 <pre class="ascii"> ███████╗████████╗██████╗  ██████╗ ██████╗ ███████╗███████╗
  ██╔════╝╚══██╔══╝██╔══██╗██╔═══██╗██╔══██╗██╔════╝██╔════╝
  ███████╗   ██║   ██████╔╝██║   ██║██████╔╝█████╗  ███████╗
@@ -97,38 +140,56 @@
   <div class="tag">Claude Code, but for your Strobes pentest agents.</div>
   <p class="lede">A local, terminal-native client for <b>Strobes Agents AI</b>. It binds to a remote Strobes
   organization over MasterKey auth, streams agent runs live in a clean Ratatui UI, and runs the
-  <b>shell sandbox and browser on your own machine</b> — so the agent's tools operate on your real files.</p>
+  <b>shell sandbox and browser on your own machine</b> — so the agent's tools operate on your real files and your real browser.</p>
   <div class="cta">
     <a class="btn" href="#install">Install →</a>
     <a class="btn ghost" href="https://github.com/strobes-co/strobes-agents-cli/releases/latest">Latest release</a>
-    <a class="btn ghost" href="https://github.com/strobes-co/strobes-agents-cli">Source on GitHub</a>
+    <a class="btn ghost" href="https://github.com/strobes-co/strobes-agents-cli">Source</a>
   </div>
   <div class="badges">
     <span class="badge">Rust · Ratatui</span>
     <span class="badge">macOS · Linux · Windows</span>
     <span class="badge">MasterKey auth</span>
     <span class="badge">local shell + browser</span>
+    <span class="badge">auto-reconnect</span>
     <span class="badge">self-update</span>
   </div>
 </div></div>
+
+<!-- WHAT -->
+<section><div class="wrap">
+  <h2><span class="hash">#</span> What it is</h2>
+  <div class="two">
+    <div>
+      <p>The Strobes platform runs autonomous pentest agents in the cloud — orchestration, guardrails, and the LLM live remotely. This CLI is the <b>local half</b>: it connects to a thread over a WebSocket and, when the agent needs to touch a real environment, <b>your machine becomes the agent's sandbox</b>.</p>
+      <p>That means the agent's shell commands run against the workspace files synced to your disk, and its browser tools drive a real Chrome on your screen — while the heavy lifting (planning, models, findings, approvals) stays on the backend.</p>
+    </div>
+    <div>
+      <ul class="ticks">
+        <li>Stream agent runs live — thinking, tool calls, results, Markdown.</li>
+        <li>Run the shell &amp; browser the agent asks for, locally.</li>
+        <li>Manage workspaces, threads, findings, approvals and credits.</li>
+        <li>Multi-tenant, cross-platform, self-updating.</li>
+      </ul>
+    </div>
+  </div>
+</div></section>
 
 <!-- INSTALL -->
 <span id="install" class="anchor"></span>
 <section><div class="wrap">
   <h2><span class="hash">#</span> Install</h2>
-  <p class="muted">Prebuilt binaries for every platform are on the <a href="https://github.com/strobes-co/strobes-agents-cli/releases/latest">releases</a> page. One-liners below detect your architecture, fetch the latest release, and put <code class="inl">strobes</code> on your PATH.</p>
+  <p class="muted">Prebuilt binaries for every platform are on the <a href="https://github.com/strobes-co/strobes-agents-cli/releases/latest">releases</a> page. The one-liners detect your architecture, fetch the latest release, and put <code class="inl">strobes</code> on your PATH.</p>
 
-  <div class="two">
-    <div>
-      <h3>macOS / Linux</h3>
-      <pre class="code">curl -fsSL https://raw.githubusercontent.com/strobes-co/strobes-agents-cli/main/install.sh | bash</pre>
-    </div>
-    <div>
-      <h3>Windows (PowerShell)</h3>
-      <pre class="code">irm https://github.com/strobes-co/strobes-agents-cli/releases/latest/download/strobes-x86_64-pc-windows-msvc.tar.gz -OutFile s.tgz
+  <h3>macOS / Linux</h3>
+  <pre class="code">curl -fsSL https://raw.githubusercontent.com/strobes-co/strobes-agents-cli/main/install.sh | bash</pre>
+
+  <h3>Windows (PowerShell)</h3>
+  <pre class="code">irm https://github.com/strobes-co/strobes-agents-cli/releases/latest/download/strobes-x86_64-pc-windows-msvc.tar.gz -OutFile s.tgz
 tar -xzf s.tgz; .\strobes-x86_64-pc-windows-msvc\strobes.exe --help</pre>
-    </div>
-  </div>
+
+  <h3>Already installed? Self-update</h3>
+  <pre class="code">strobes update           <span class="c"># downloads the latest release and replaces the binary in place</span></pre>
 
   <h3>Pick a binary manually</h3>
   <table>
@@ -138,22 +199,21 @@ tar -xzf s.tgz; .\strobes-x86_64-pc-windows-msvc\strobes.exe --help</pre>
     <tr><td>Linux (x86-64)</td><td><code>strobes-x86_64-unknown-linux-gnu.tar.gz</code></td></tr>
     <tr><td>Windows (x86-64)</td><td><code>strobes-x86_64-pc-windows-msvc.tar.gz</code></td></tr>
   </table>
-  <p class="muted" style="margin-top:14px">Each ships a <code class="inl">.sha256</code> checksum. Already installed? <code class="inl">strobes update</code> self-updates in place. Build from source with <code class="inl">cargo build --release</code> (needs Rust; Chrome only for browser tools).</p>
+  <p class="muted" style="margin-top:12px">Each ships a <code class="inl">.sha256</code> checksum. Build from source with <code class="inl">cargo build --release</code> (needs Rust; Chrome only for the browser tools).</p>
 </div></section>
 
 <!-- QUICK START -->
-<span id="quickstart" class="anchor"></span>
 <section><div class="wrap">
   <h2><span class="hash">#</span> Quick start</h2>
-  <pre class="code"><span class="c"># 1. Authenticate (get a MasterKey from Strobes UI → Organization → API access)</span>
-strobes login                 <span class="c"># interactive prompts (or pass --base-url/--org-id/--master-key)</span>
-strobes status                <span class="c"># ✔ connection OK · ✔ up to date</span>
+  <pre class="code"><span class="c"># 1. Authenticate — get a MasterKey from Strobes UI → Organization → API access</span>
+strobes login            <span class="c"># interactive (or --base-url / --org-id / --master-key)</span>
+strobes status           <span class="c"># ✔ connection OK · ✔ up to date</span>
 
 <span class="c"># 2. Work</span>
-strobes                       <span class="c"># open the chat TUI: pick a workspace → thread → chat</span>
-strobes workspaces            <span class="c"># list remote workspaces (+ thread counts + credits)</span>
-strobes credits               <span class="c"># AI credit usage, org total + per-workspace</span></pre>
-  <p class="muted">Env vars persist to <code class="inl">~/.config/strobes-ai/config.json</code> (macOS: <code class="inl">~/Library/Application&nbsp;Support/strobes-ai/config.json</code>). Manage multiple deployments as <b>tenants</b> and switch with <code class="inl">--tenant &lt;name&gt;</code>.</p>
+strobes                  <span class="c"># open the chat TUI: pick a workspace → thread → chat</span>
+strobes workspaces       <span class="c"># list workspaces (+ thread counts + credits)</span>
+strobes credits          <span class="c"># AI credit usage, org total + per-workspace</span></pre>
+  <p class="muted">Credentials persist to <code class="inl">~/.config/strobes-ai/config.json</code> (macOS: <code class="inl">~/Library/Application&nbsp;Support/strobes-ai/config.json</code>). Manage multiple deployments as <b>tenants</b> and switch with <code class="inl">--tenant &lt;name&gt;</code>.</p>
 </div></section>
 
 <!-- COMMANDS -->
@@ -163,63 +223,130 @@ strobes credits               <span class="c"># AI credit usage, org total + per
   <table>
     <tr><th>Command</th><th>What it does</th></tr>
     <tr><td><code>chat</code> <span class="pill">default</span></td><td>Interactive chat TUI — streams the agent run, runs its tools locally. Workspace → thread → chat selection on open.</td></tr>
-    <tr><td><code>login</code></td><td>Configure credentials for a tenant — interactive prompts or <code>--base-url / --org-id / --master-key / --deployment</code> flags. First configured tenant becomes the default.</td></tr>
+    <tr><td><code>login</code></td><td>Configure credentials for a tenant — prompts or <code>--base-url / --org-id / --master-key / --deployment</code>. First configured tenant becomes the default.</td></tr>
     <tr><td><code>tenants</code></td><td>List configured tenants (★ marks the default).</td></tr>
-    <tr><td><code>status</code></td><td>Show the active profile + connectivity, and whether an update is available.</td></tr>
-    <tr><td><code>workspaces</code></td><td>List remote workspaces with thread counts and credits consumed.</td></tr>
+    <tr><td><code>status</code></td><td>Active profile + connectivity, and whether an update is available.</td></tr>
+    <tr><td><code>workspaces</code></td><td>List workspaces with thread counts and credits consumed.</td></tr>
     <tr><td><code>threads</code></td><td>List your chat threads.</td></tr>
     <tr><td><code>credits</code></td><td>AI credit usage — org total + per-workspace breakdown. Scope with <code>--workspace</code> / <code>--thread</code>.</td></tr>
-    <tr><td><code>bind</code></td><td>Pick or create a workspace (<code>--new --name</code>), optionally <code>--download</code> its files locally.</td></tr>
+    <tr><td><code>bind</code></td><td>Pick or create a workspace (<code>--new --name</code>), optionally <code>--download</code> its files.</td></tr>
     <tr><td><code>pull</code></td><td>Download a workspace's files to a local folder.</td></tr>
-    <tr><td><code>update</code></td><td>Self-update to the latest release (downloads + replaces the binary). <code>--force</code> to reinstall.</td></tr>
+    <tr><td><code>update</code></td><td>Self-update to the latest release. <code>--force</code> reinstalls.</td></tr>
     <tr><td><code>probe</code></td><td>Headless: connect, stream events to stdout, run local tools — verify the WS + local-execution path without the TUI.</td></tr>
     <tr><td><code>--version</code> · <code>-V</code></td><td>Print the version. Global <code>--tenant</code> (alias <code>--profile</code>) selects a tenant for any command.</td></tr>
   </table>
-</div></section>
 
-<!-- KEYS -->
-<span id="keys" class="anchor"></span>
-<section><div class="wrap">
-  <h2><span class="hash">#</span> In-chat keys</h2>
+  <h3>In-chat keys</h3>
   <table>
     <tr><th>Key</th><th>Action</th></tr>
-    <tr><td><kbd>Enter</kbd></td><td>send message</td></tr>
-    <tr><td><kbd>/</kbd></td><td>slash-command autocomplete (Tab/Enter to complete)</td></tr>
-    <tr><td><kbd>^W</kbd> · <kbd>^O</kbd></td><td>workspaces browser · threads browser (type to search)</td></tr>
+    <tr><td><kbd>Enter</kbd> · <kbd>/</kbd></td><td>send · slash-command autocomplete</td></tr>
+    <tr><td><kbd>^W</kbd> · <kbd>^O</kbd></td><td>workspaces · threads browser (type to search)</td></tr>
     <tr><td><kbd>^F</kbd> · <kbd>^A</kbd></td><td>findings · approvals for the bound workspace</td></tr>
     <tr><td><kbd>^L</kbd> · <kbd>^E</kbd></td><td>list synced local files · open the folder in Finder/Explorer</td></tr>
-    <tr><td><kbd>^Y</kbd></td><td>copy the whole transcript to the clipboard <span class="muted">(or drag-select natively — the mouse isn't captured)</span></td></tr>
+    <tr><td><kbd>^Y</kbd></td><td>copy the whole transcript <span class="muted">(or drag-select natively — the mouse isn't captured)</span></td></tr>
     <tr><td><kbd>^T</kbd> · <kbd>^R</kbd></td><td>toggle thinking · markdown</td></tr>
-    <tr><td><kbd>Esc</kbd></td><td>back (chat → threads → workspaces) · <kbd>PgUp</kbd>/<kbd>PgDn</kbd>/<kbd>↑↓</kbd> scroll</td></tr>
-    <tr><td><kbd>^C</kbd></td><td>cancel the running turn (or quit when idle)</td></tr>
+    <tr><td><kbd>Esc</kbd> · <kbd>^C</kbd></td><td>back (chat → threads → workspaces) · cancel/quit</td></tr>
   </table>
-  <p class="muted" style="margin-top:12px">A working <b>spinner</b> shows in the status bar while a turn runs (incl. tool/HTTP waits). The status bar also shows <span style="color:var(--green)">◈ live run</span> + <span style="color:var(--mag)">⛁ chat-lifetime</span> credit usage, the bound <b>workspace · current task</b> (top-right), and the authenticated tenant.</p>
 </div></section>
 
-<!-- FEATURES -->
+<!-- FEATURES (detailed) -->
 <span id="features" class="anchor"></span>
 <section><div class="wrap">
-  <h2><span class="hash">#</span> Features</h2>
-  <div class="grid g3" style="margin-top:16px">
-    <div class="card"><h4><span class="ic">⌁</span> Multi-tenant</h4><p>Configure many Strobes deployments; the first becomes default. Switch per-run with <code class="inl">--tenant</code>. Each keeps its own creds + bindings.</p></div>
-    <div class="card"><h4><span class="ic">◈</span> Live credits</h4><p>Per-run, per-chat (lifetime), per-workspace and org-wide AI credit + token usage — in the status bar and the <code class="inl">credits</code> command.</p></div>
-    <div class="card"><h4><span class="ic">⊞</span> Workspaces</h4><p>Create from the picker (prompts for a name + setup prompt → opens the AI setup chat), bind, and sync files locally. Per-workspace credit & thread counts.</p></div>
-    <div class="card"><h4><span class="ic">⌨</span> Local shell sandbox</h4><p>The agent's <code class="inl">execute_command</code> / <code class="inl">execute_code</code> run <b>on your machine</b> against the synced workspace files — Python, Bash, Node, Ruby.</p></div>
-    <div class="card"><h4><span class="ic">◐</span> Local browser</h4><p>9 <code class="inl">browser_*</code> tools drive a real local Chrome via CDP. Auto-detects Chrome, guides install, or auto-downloads Chrome for Testing.</p></div>
-    <div class="card"><h4><span class="ic">⟳</span> Auto-reconnect</h4><p>The WebSocket self-heals — on a network drop it re-dials with capped backoff instead of sitting idle, transparently to the UI.</p></div>
-    <div class="card"><h4><span class="ic">⬆</span> Self-update</h4><p><code class="inl">strobes update</code> replaces the binary in place. The CLI also suggests updates on start and in <code class="inl">status</code>.</p></div>
-    <div class="card"><h4><span class="ic">⌖</span> Fast pickers</h4><p>Type-to-search workspace/thread pickers, bottom-anchored, single alternate-screen (no flicker). Esc navigates back instead of quitting.</p></div>
-    <div class="card"><h4><span class="ic">⚑</span> Cross-platform</h4><p>macOS (arm64/x64), Linux, and Windows binaries from CI. Native shell per OS (<code class="inl">cmd.exe</code> on Windows).</p></div>
-    <div class="card"><h4><span class="ic">⎘</span> Copy &amp; select</h4><p>Native terminal selection works (mouse isn't captured); <code class="inl">^Y</code> copies the whole transcript to your clipboard.</p></div>
-    <div class="card"><h4><span class="ic">⚡</span> Fast startup</h4><p>Startup round-trips (REST + WebSocket) run in parallel; a dev DNS bypass skips slow <code class="inl">.local</code> mDNS lookups.</p></div>
-    <div class="card"><h4><span class="ic">◆</span> Clean transcript</h4><p>Agent headers, tool calls + results, dimmed thinking, Markdown (incl. tables), padded layout, full thread history on open.</p></div>
+  <h2><span class="hash">#</span> Features in depth</h2>
+
+  <div class="feat"><div class="two">
+    <div>
+      <div class="lbl">Multi-tenant</div>
+      <h3>One CLI, many deployments</h3>
+      <p>Each Strobes deployment is a <b>tenant</b> with its own base URL, org, MasterKey and bindings, all kept in one <code class="inl">config.json</code>. The first one you configure becomes the default; switch per-command with <code class="inl">--tenant</code>. <code class="inl">strobes tenants</code> lists them with the default starred.</p>
+    </div>
+    <pre class="code">strobes --tenant acme login   <span class="c"># first → default</span>
+strobes --tenant staging login
+strobes tenants
+<span class="c"># ★ acme       450d6756…  https://app.strobes.co</span>
+<span class="c">#   staging    9f0c…      https://staging.strobes.co</span>
+strobes --tenant staging chat</pre>
+  </div></div>
+
+  <div class="feat"><div class="two">
+    <div>
+      <div class="lbl">Credits</div>
+      <h3>Live AI credit visibility</h3>
+      <p>Know exactly what a run costs. The status bar shows the <span style="color:var(--green)">◈ current run</span> and the <span style="color:var(--mag)">⛁ chat lifetime</span> usage live as tokens stream. <code class="inl">strobes credits</code> reports org totals plus a per-workspace breakdown, and the workspace list shows credits per workspace.</p>
+    </div>
+    <pre class="code">strobes credits
+<span class="c"># ◈ organization:  12.9 credits · 8.2M tokens · 33 runs</span>
+<span class="c"># by workspace:</span>
+<span class="c">#   3.44 cr · 2.6M tok · 7 runs   Mobile RASP &amp; NPCI Checks</span>
+<span class="c">#   3.10 cr · 3.7M tok · 8 runs   SAST &amp; SCA Review</span>
+strobes credits --thread &lt;uuid&gt;</pre>
+  </div></div>
+
+  <div class="feat"><div class="two">
+    <div>
+      <div class="lbl">Workspaces</div>
+      <h3>Create, bind, and sync</h3>
+      <p>Pick <b>➕ New workspace</b> in the picker and the CLI prompts for a <b>name</b> and an optional <b>setup prompt</b>, then drops you into the AI setup chat with that prompt sent. Binding a workspace downloads its files into a local sandbox so the agent's <code class="inl">execute_command</code> and <code class="inl">workspace_get_meta</code> see the real tree. Pickers are type-to-search.</p>
+    </div>
+    <pre class="code">strobes                  <span class="c"># pick ➕ New workspace → name + prompt</span>
+strobes bind --new --name "Acme recon" --download
+strobes pull --workspace &lt;uuid&gt;   <span class="c"># files → local folder</span>
+<span class="c"># in chat:  ^L browse files · ^E open in Finder/Explorer</span></pre>
+  </div></div>
+
+  <div class="feat"><div class="two">
+    <div>
+      <div class="lbl">Local execution</div>
+      <h3>Your machine is the sandbox</h3>
+      <p>When the agent calls <code class="inl">execute_command</code> / <code class="inl">execute_code</code>, the CLI runs it locally and streams the output back — Python, Bash, Node and Ruby, in the synced workspace dir. On Windows it uses <code class="inl">cmd.exe</code> and the right interpreters. The agent never executes on your box without you running the CLI.</p>
+    </div>
+    <pre class="code"><span class="c"># probe the local-execution path headlessly</span>
+strobes probe --thread &lt;uuid&gt; --send \
+  'run: echo OK &amp;&amp; uname -a'
+<span class="c"># [probe] execute_command LOCAL  echo OK &amp;&amp; uname -a</span>
+<span class="c"># [probe] local tool done 11ms exit=0</span></pre>
+  </div></div>
+
+  <div class="feat"><div class="two">
+    <div>
+      <div class="lbl">Browser</div>
+      <h3>A real local browser, driven by the agent</h3>
+      <p>Nine <code class="inl">browser_*</code> tools drive a real Chrome via the DevTools Protocol (chromiumoxide). The CLI auto-detects Chrome; if it's missing it returns platform-specific install guidance, honours <code class="inl">STROBES_AI_CHROME</code>, or with <code class="inl">STROBES_AI_BROWSER_AUTOINSTALL=1</code> downloads a self-contained Chrome for Testing. Headed by default; <code class="inl">STROBES_AI_BROWSER_HEADLESS=1</code> for headless.</p>
+    </div>
+    <pre class="code">STROBES_AI_BROWSER_HEADLESS=1 strobes probe \
+  --thread &lt;uuid&gt; --send \
+  'browser_navigate to https://example.com, report the title'
+<span class="c"># browser_navigate LOCAL  https://example.com</span>
+<span class="c"># tool_output: "Example Domain — https://example.com/"</span></pre>
+  </div></div>
+
+  <div class="feat"><div class="two">
+    <div>
+      <div class="lbl">Resilience</div>
+      <h3>Auto-reconnect &amp; self-update</h3>
+      <p>If the network drops, the WebSocket <b>re-dials with capped backoff</b> instead of sitting idle — the handle and channel survive reconnects, so the UI just shows <code class="inl">reconnecting…</code> then <code class="inl">connected</code>. The CLI also checks for newer releases on start and in <code class="inl">status</code>, and <code class="inl">strobes update</code> upgrades in place.</p>
+    </div>
+    <pre class="code"><span class="c"># status bar on a flaky link:</span>
+<span class="c"># ○ disconnected — reconnecting in 2s…</span>
+<span class="c"># ● connected</span>
+strobes status
+<span class="c"># ⬆ update available: v0.3.0 — run `strobes update`</span></pre>
+  </div></div>
+
+  <div class="grid g3" style="margin-top:30px">
+    <div class="card"><h4><span class="ic">⌨</span> Type-to-search pickers</h4><p>Workspace/thread pickers filter as you type, bottom-anchored, single alternate-screen (no flicker). Esc navigates back instead of quitting.</p></div>
+    <div class="card"><h4><span class="ic">⎘</span> Copy &amp; select</h4><p>The mouse isn't captured, so native drag-select + copy works in the transcript; <code class="inl">^Y</code> copies the whole conversation.</p></div>
+    <div class="card"><h4><span class="ic">◐</span> Working spinner</h4><p>A spinner in the status bar shows activity during any turn — including long tool / HTTP waits.</p></div>
+    <div class="card"><h4><span class="ic">⚡</span> Fast startup</h4><p>Startup REST + WebSocket round-trips run in parallel; a dev DNS bypass skips slow <code class="inl">.local</code> mDNS lookups.</p></div>
+    <div class="card"><h4><span class="ic">⊞</span> Context indicator</h4><p>The transcript shows the bound <b>workspace · current task</b> top-right and the authenticated tenant + version in the banner.</p></div>
+    <div class="card"><h4><span class="ic">⚑</span> Cross-platform</h4><p>macOS (arm64/x64), Linux, and Windows binaries from CI — native shell + browser handling per OS.</p></div>
   </div>
 </div></section>
 
 <!-- TOOLS -->
 <span id="tools" class="anchor"></span>
 <section><div class="wrap">
-  <h2><span class="hash">#</span> Local tools the agent runs on your machine</h2>
+  <h2><span class="hash">#</span> Tools the agent runs on your machine</h2>
   <div class="two">
     <div>
       <h3>Shell sandbox</h3>
@@ -234,7 +361,7 @@ strobes credits               <span class="c"># AI credit usage, org total + per
       <h3>Browser <span class="muted" style="font-size:13px">(local Chrome via CDP)</span></h3>
       <table>
         <tr><th>Tool</th><th>Does</th></tr>
-        <tr><td><code>browser_navigate</code></td><td>load a URL, return title</td></tr>
+        <tr><td><code>browser_navigate</code></td><td>load a URL, return the title</td></tr>
         <tr><td><code>browser_snapshot</code></td><td>DOM digest of interactive/landmark elements</td></tr>
         <tr><td><code>browser_click</code> · <code>browser_type</code></td><td>click / type into a CSS selector</td></tr>
         <tr><td><code>browser_scroll</code></td><td>scroll the page</td></tr>
@@ -244,31 +371,36 @@ strobes credits               <span class="c"># AI credit usage, org total + per
       </table>
     </div>
   </div>
-  <p class="muted" style="margin-top:14px">Browser tools need Chrome/Chromium. Set <code class="inl">STROBES_AI_BROWSER_HEADLESS=1</code> for headless, <code class="inl">STROBES_AI_CHROME=/path</code> for a custom install, or <code class="inl">STROBES_AI_BROWSER_AUTOINSTALL=1</code> to fetch a self-contained Chrome for Testing on first use.</p>
 </div></section>
 
 <!-- CONFIG -->
 <span id="config" class="anchor"></span>
 <section><div class="wrap">
   <h2><span class="hash">#</span> Configuration</h2>
-  <h3>Required (env or <code class="inl">login</code>)</h3>
-  <table>
-    <tr><th>Variable</th><th>Purpose</th></tr>
-    <tr><td><code>STROBES_AI_BASE_URL</code></td><td>deployment URL, e.g. <code>https://app.strobes.co</code></td></tr>
-    <tr><td><code>STROBES_AI_ORG_ID</code></td><td>organization UUID</td></tr>
-    <tr><td><code>STROBES_AI_MASTER_KEY</code></td><td>40-char MasterKey (stored locally, git-ignored)</td></tr>
-    <tr><td><code>STROBES_AI_DEPLOYMENT</code></td><td><code>direct</code> for the bare <code>/v1</code> path (no proxy); default is <code>/api/v1</code></td></tr>
-  </table>
-  <h3>Optional</h3>
-  <table>
-    <tr><th>Variable</th><th>Purpose</th></tr>
-    <tr><td><code>STROBES_AI_HOME</code></td><td>override the config directory</td></tr>
-    <tr><td><code>STROBES_AI_SANDBOX</code></td><td>override the local workspace sandbox dir</td></tr>
-    <tr><td><code>STROBES_AI_RESOLVE</code></td><td>dev DNS bypass — <code>host:1.2.3.4</code> (dial an IP, keep the Host header)</td></tr>
-    <tr><td><code>STROBES_AI_BROWSER_HEADLESS</code></td><td><code>1</code> → run Chrome headless</td></tr>
-    <tr><td><code>STROBES_AI_CHROME</code></td><td>path to a Chrome/Chromium binary</td></tr>
-    <tr><td><code>STROBES_AI_BROWSER_AUTOINSTALL</code></td><td><code>1</code> → auto-download Chrome for Testing if none found</td></tr>
-  </table>
+  <div class="two">
+    <div>
+      <h3>Required <span class="muted" style="font-size:13px">(env or <code class="inl">login</code>)</span></h3>
+      <table>
+        <tr><th>Variable</th><th>Purpose</th></tr>
+        <tr><td><code>STROBES_AI_BASE_URL</code></td><td>deployment URL</td></tr>
+        <tr><td><code>STROBES_AI_ORG_ID</code></td><td>organization UUID</td></tr>
+        <tr><td><code>STROBES_AI_MASTER_KEY</code></td><td>40-char MasterKey</td></tr>
+        <tr><td><code>STROBES_AI_DEPLOYMENT</code></td><td><code>direct</code> → bare <code>/v1</code> (default <code>/api/v1</code>)</td></tr>
+      </table>
+    </div>
+    <div>
+      <h3>Optional</h3>
+      <table>
+        <tr><th>Variable</th><th>Purpose</th></tr>
+        <tr><td><code>STROBES_AI_HOME</code></td><td>config directory override</td></tr>
+        <tr><td><code>STROBES_AI_SANDBOX</code></td><td>local sandbox dir override</td></tr>
+        <tr><td><code>STROBES_AI_RESOLVE</code></td><td>dev DNS bypass — <code>host:1.2.3.4</code></td></tr>
+        <tr><td><code>STROBES_AI_BROWSER_HEADLESS</code></td><td><code>1</code> → headless Chrome</td></tr>
+        <tr><td><code>STROBES_AI_CHROME</code></td><td>path to a Chrome binary</td></tr>
+        <tr><td><code>STROBES_AI_BROWSER_AUTOINSTALL</code></td><td><code>1</code> → auto-download Chrome</td></tr>
+      </table>
+    </div>
+  </div>
 </div></section>
 
 <!-- ARCHITECTURE -->
@@ -289,5 +421,28 @@ strobes credits               <span class="c"># AI credit usage, org total + per
   <p class="muted">Not affiliated with Anthropic. "Claude Code" referenced for analogy only.</p>
 </div></footer>
 
+<script>
+(function(){
+  var root=document.documentElement, btn=document.getElementById('themebtn');
+  function setTheme(t){root.setAttribute('data-theme',t);localStorage.setItem('theme',t);btn.textContent=(t==='dark')?'☀':'☾';}
+  var saved=localStorage.getItem('theme');
+  var sysLight=window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches;
+  setTheme(saved||(sysLight?'light':'dark'));
+  btn.addEventListener('click',function(){setTheme(root.getAttribute('data-theme')==='dark'?'light':'dark');});
+
+  document.querySelectorAll('pre.code').forEach(function(pre){
+    var original=pre.textContent;
+    var b=document.createElement('button');
+    b.className='copybtn';b.type='button';b.textContent='Copy';
+    b.addEventListener('click',function(){
+      navigator.clipboard.writeText(original.trim()).then(function(){
+        b.textContent='Copied!';b.classList.add('ok');
+        setTimeout(function(){b.textContent='Copy';b.classList.remove('ok');},1400);
+      }).catch(function(){b.textContent='⌘C';});
+    });
+    pre.appendChild(b);
+  });
+})();
+</script>
 </body>
 </html>
