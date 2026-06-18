@@ -118,6 +118,24 @@
   @media(max-width:860px){.two{grid-template-columns:1fr}}
   .pill{display:inline-block;font-family:var(--mono);font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--green);background:color-mix(in srgb,var(--green) 10%,transparent)}
   .diagram{font-family:var(--mono);font-size:12.5px;color:var(--txt);white-space:pre;overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
+  .archwrap{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:14px;padding:10px;margin-top:8px;overflow-x:auto}
+  .arch{width:100%;height:auto;display:block;min-width:680px;font-family:var(--sans)}
+  .arch .box{fill:var(--panel);stroke:var(--line)}
+  .arch .zone{fill:none;stroke:var(--line);stroke-dasharray:3 4}
+  .arch .be{fill:var(--navy)}
+  html[data-theme="dark"] .arch .be{fill:#0e2747}
+  .arch .ttl{fill:var(--head);font-weight:700}
+  .arch .sub{fill:var(--dim)}
+  .arch .zlbl{fill:var(--dim);font-weight:700;letter-spacing:1.5px}
+  .arch .ic{fill:var(--cyan)}
+  .arch .wfg{fill:#eaf2fb}
+  .arch .wfgd{fill:#9fb6d4}
+  .arch .flow{stroke:var(--cyan);stroke-width:2;fill:none;stroke-dasharray:7 7;animation:flow 1s linear infinite}
+  .arch .flow2{stroke:var(--green);stroke-width:1.6;fill:none;stroke-dasharray:2 6;stroke-linecap:round;opacity:.8}
+  .arch .lbl{fill:var(--head);font-weight:600}
+  .arch .lbld{fill:var(--dim)}
+  @keyframes flow{to{stroke-dashoffset:-28}}
+  @media(prefers-reduced-motion:reduce){.arch .flow{animation:none}}
   .note{border:1px solid var(--line);border-left:3px solid var(--yellow);background:color-mix(in srgb,var(--yellow) 8%,transparent);border-radius:8px;padding:12px 14px;color:var(--txt);font-size:14px;margin:14px 0}
   .anchor{position:relative;top:-66px;visibility:hidden}
   footer{padding:42px 0;color:var(--dim);font-size:13px}
@@ -436,13 +454,71 @@ strobes status
 <!-- ARCHITECTURE -->
 <section><div class="wrap">
   <h2><span class="hash">#</span> How it works</h2>
-  <div class="diagram">┌──────────────┐   pulse WS (chat + tool.local_execute)   ┌──────────────────┐
-│   strobes    │ ◀──────────────────────────────────────▶ │  Strobes backend │
-│   (local)    │   workspace files · findings · approvals  │  remote agents,  │
-└──────────────┘                                           │ orchestration,   │
-   ▲   ▲                                                    │ guardrails, LLM  │
-   │   └─ local Chrome (browser_* tools)                    └──────────────────┘
-   └───── local shell sandbox (execute_command / execute_code)</div>
+  <div class="archwrap">
+  <svg class="arch" viewBox="0 0 940 360" role="img" aria-label="Architecture: the local strobes CLI talks to the Strobes backend over a pulse WebSocket; the agent's shell and browser tools run on your machine.">
+    <!-- ZONES -->
+    <rect class="zone" x="16" y="40" width="384" height="300" rx="16"/>
+    <text class="zlbl" x="34" y="64" font-size="12">YOUR MACHINE</text>
+    <rect class="zone" x="556" y="40" width="368" height="300" rx="16"/>
+    <text class="zlbl" x="574" y="64" font-size="12">STROBES&#160;CLOUD</text>
+
+    <!-- LOCAL: strobes CLI -->
+    <rect class="box" x="40" y="84" width="336" height="74" rx="11"/>
+    <circle class="ic" cx="68" cy="121" r="9"/><text x="68" y="125" text-anchor="middle" font-size="11" fill="#04121a" font-weight="700">◆</text>
+    <text class="ttl" x="90" y="115" font-size="15">strobes CLI</text>
+    <text class="sub" x="90" y="135" font-size="12">Ratatui chat UI · streams the run live</text>
+
+    <!-- LOCAL: shell sandbox -->
+    <rect class="box" x="40" y="184" width="160" height="124" rx="11"/>
+    <text class="ic" x="60" y="216" font-size="17">⌨</text>
+    <text class="ttl" x="60" y="240" font-size="13">shell sandbox</text>
+    <text class="sub" x="60" y="262" font-size="11">execute_command</text>
+    <text class="sub" x="60" y="279" font-size="11">execute_code</text>
+    <text class="sub" x="60" y="296" font-size="11">py · bash · node · ruby</text>
+
+    <!-- LOCAL: browser -->
+    <rect class="box" x="216" y="184" width="160" height="124" rx="11"/>
+    <text class="ic" x="236" y="216" font-size="17">◐</text>
+    <text class="ttl" x="236" y="240" font-size="13">local browser</text>
+    <text class="sub" x="236" y="262" font-size="11">9 browser_* tools</text>
+    <text class="sub" x="236" y="279" font-size="11">real Chrome via CDP</text>
+    <text class="sub" x="236" y="296" font-size="11">navigate · click · snap</text>
+
+    <!-- connectors CLI → sub-tools -->
+    <path class="flow2" d="M120 158 V184"/>
+    <path class="flow2" d="M296 158 V184"/>
+
+    <!-- BACKEND -->
+    <rect class="be box" x="580" y="84" width="320" height="74" rx="11"/>
+    <text class="wfg" x="600" y="115" font-size="15" font-weight="700">⚙ agents · orchestration</text>
+    <text class="wfgd" x="600" y="135" font-size="12">plans tasks, calls tools, decides next step</text>
+
+    <rect class="be box" x="580" y="184" width="152" height="74" rx="11"/>
+    <text class="wfg" x="600" y="214" font-size="13" font-weight="700">🛡 guardrails</text>
+    <text class="wfgd" x="600" y="234" font-size="11">approvals · safety</text>
+
+    <rect class="be box" x="748" y="184" width="152" height="74" rx="11"/>
+    <text class="wfg" x="768" y="214" font-size="13" font-weight="700">✦ LLM</text>
+    <text class="wfgd" x="768" y="234" font-size="11">reasoning · models</text>
+
+    <rect class="be box" x="580" y="278" width="320" height="48" rx="11"/>
+    <text class="wfg" x="600" y="300" font-size="12.5" font-weight="700">workspaces · threads · findings · credits</text>
+    <text class="wfgd" x="600" y="316" font-size="11">MasterKey REST surface</text>
+
+    <!-- CONNECTION -->
+    <defs>
+      <marker id="ar" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="var(--cyan)"/></marker>
+      <marker id="al" markerWidth="9" markerHeight="9" refX="0" refY="3" orient="auto"><path d="M6,0 L0,3 L6,6 Z" fill="var(--cyan)"/></marker>
+    </defs>
+    <text class="lbl" x="478" y="116" font-size="12.5" text-anchor="middle">pulse WebSocket</text>
+    <path class="flow" d="M384 132 H556" marker-end="url(#ar)" marker-start="url(#al)"/>
+    <text class="lbld" x="478" y="152" font-size="10.5" text-anchor="middle">chat · tool.local_execute · results</text>
+
+    <text class="lbl" x="478" y="232" font-size="12.5" text-anchor="middle">REST · MasterKey</text>
+    <path class="flow2" d="M400 248 H556" marker-end="url(#ar)" marker-start="url(#al)" style="stroke:var(--dim);opacity:.7"/>
+    <text class="lbld" x="478" y="268" font-size="10.5" text-anchor="middle">files · findings · credits</text>
+  </svg>
+  </div>
   <p class="muted" style="margin-top:14px">The remote agent decides; your machine executes its shell &amp; browser tools and streams results back over the pulse WebSocket. Auth is MasterKey (<code class="inl">Authorization: token …</code>, WS <code class="inl">?api_key=</code>); workspaces, threads, history, files, findings, approvals and credits come over a MasterKey-authed REST surface.</p>
 </div></section>
 
