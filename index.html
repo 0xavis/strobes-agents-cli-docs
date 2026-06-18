@@ -53,15 +53,32 @@
   #themebtn{cursor:pointer;background:var(--panel);border:1px solid var(--line);color:var(--head);border-radius:8px;width:34px;height:32px;font-size:15px;line-height:1;display:inline-flex;align-items:center;justify-content:center}
   #themebtn:hover{border-color:var(--cyan)}
   @media(max-width:720px){nav.links a:not(.gh){display:none}}
-  .hero{padding:54px 0 30px;border-bottom:1px solid var(--line)}
+  .hero{padding:52px 0 34px;border-bottom:1px solid var(--line)}
+  .herogrid{display:grid;grid-template-columns:1fr 1.05fr;gap:40px;align-items:center}
+  @media(max-width:920px){.herogrid{grid-template-columns:1fr;gap:30px}}
   .ascii{font-family:var(--mono);color:var(--cyan);font-size:12px;line-height:1.15;white-space:pre;overflow-x:auto;margin:0 0 6px;text-shadow:var(--shadow)}
   .ascii .sub{color:var(--green)}
+  /* terminal window mockup (always dark — terminals are) */
+  .term{background:#0a1422;border:1px solid #1b3150;border-radius:13px;overflow:hidden;box-shadow:0 28px 70px -24px rgba(4,12,24,.7);font-family:var(--mono)}
+  .termbar{display:flex;align-items:center;gap:7px;padding:10px 13px;background:#0d1c30;border-bottom:1px solid #1b3150}
+  .dot{width:11px;height:11px;border-radius:50%;display:inline-block}
+  .dot.r{background:#ff5f57}.dot.y{background:#febc2e}.dot.g{background:#28c840}
+  .termtitle{margin-left:9px;color:#6b86a6;font-size:12px}
+  .termbody{padding:15px 17px;font-size:12.5px;line-height:1.55;color:#c2d2e4;overflow-x:auto}
+  .termbody .ascii{font-size:10.5px;margin:0 0 11px;text-shadow:0 0 16px rgba(43,212,212,.3)}
+  .tl{white-space:pre;display:block}
+  .tdim{color:#7790ab}.tcyan{color:#2bd4d4}.tgreen{color:#3ad29b}.tmag{color:#7aa7ff}.tylw{color:#f5c451}
+  .cur{display:inline-block;width:7px;height:14px;background:#2bd4d4;vertical-align:-2px;margin-left:2px;animation:blink 1.1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
   .tag{font-size:21px;color:var(--head);margin:16px 0 6px;font-weight:700}
   .lede{color:var(--dim);max-width:780px;font-size:16.5px}
   .cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:22px;align-items:center}
-  .btn{display:inline-block;background:var(--cyan);color:var(--btnfg);font-weight:700;padding:10px 17px;border-radius:8px;font-size:14px}
+  .btn{display:inline-block;background:var(--cyan);color:var(--btnfg);font-weight:700;padding:10px 17px;border-radius:8px;font-size:14px;border:1px solid transparent}
   html[data-theme="light"] .btn{background:var(--navy)}
   .btn:hover{text-decoration:none;filter:brightness(1.08)}
+  .btn.ghost{background:transparent;color:var(--head);border:1px solid var(--line)}
+  html[data-theme="light"] .btn.ghost{background:#fff;color:var(--navy);border-color:#c9d6e4}
+  .btn.ghost:hover{border-color:var(--cyan);color:var(--cyan);filter:none}
   .logo{height:24px;width:24px;border-radius:6px;vertical-align:middle}
   .logo-hero{height:40px;width:40px;border-radius:9px;box-shadow:0 4px 18px rgba(11,37,69,.18)}
   .btn.ghost{background:transparent;color:var(--txt);border:1px solid var(--line)}
@@ -124,37 +141,50 @@
   </nav>
 </div></header>
 
-<div class="hero"><div class="wrap">
-<div style="display:flex;align-items:center;gap:11px;margin-bottom:20px">
-  <img class="logo-hero" src="https://strobes.co/strobes-icon.png" alt="Strobes" onerror="this.style.display='none'"/>
-  <span style="font-size:23px;font-weight:800;color:var(--head);letter-spacing:-.2px">Strobes</span>
-  <span class="badge" style="margin-left:2px">Agents CLI</span>
-</div>
+<div class="hero"><div class="wrap"><div class="herogrid">
+  <div class="herotext">
+    <div class="tag">The terminal-native client for your Strobes pentest agents.</div>
+    <p class="lede">Bind to a remote Strobes organization over MasterKey auth, stream agent runs live in a clean
+    Ratatui UI, and run the <b>shell sandbox and browser on your own machine</b> — so the agent's tools operate
+    on your real files and your real browser.</p>
+    <div class="cta">
+      <a class="btn" href="#install">Install →</a>
+      <a class="btn ghost" href="https://github.com/strobes-co/strobes-agents-cli/releases/latest">Latest release</a>
+      <a class="btn ghost" href="https://github.com/strobes-co/strobes-agents-cli">Source</a>
+    </div>
+    <div class="badges">
+      <span class="badge">Rust · Ratatui</span>
+      <span class="badge">macOS · Linux · Windows</span>
+      <span class="badge">local shell + browser</span>
+      <span class="badge">auto-reconnect</span>
+      <span class="badge">self-update</span>
+    </div>
+  </div>
+
+  <div class="term">
+    <div class="termbar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="termtitle">strobes — chat</span></div>
+    <div class="termbody">
 <pre class="ascii"> ███████╗████████╗██████╗  ██████╗ ██████╗ ███████╗███████╗
  ██╔════╝╚══██╔══╝██╔══██╗██╔═══██╗██╔══██╗██╔════╝██╔════╝
  ███████╗   ██║   ██████╔╝██║   ██║██████╔╝█████╗  ███████╗
  ╚════██║   ██║   ██╔══██╗██║   ██║██╔══██╗██╔══╝  ╚════██║
  ███████║   ██║   ██║  ██║╚██████╔╝██████╔╝███████╗███████║
  ╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚══════╝╚══════╝
-            <span class="sub">A G E N T S   A I  ·  terminal client</span></pre>
-  <div class="tag">The terminal-native client for your Strobes pentest agents.</div>
-  <p class="lede">A local, terminal-native client for <b>Strobes Agents AI</b>. It binds to a remote Strobes
-  organization over MasterKey auth, streams agent runs live in a clean Ratatui UI, and runs the
-  <b>shell sandbox and browser on your own machine</b> — so the agent's tools operate on your real files and your real browser.</p>
-  <div class="cta">
-    <a class="btn" href="#install">Install →</a>
-    <a class="btn ghost" href="https://github.com/strobes-co/strobes-agents-cli/releases/latest">Latest release</a>
-    <a class="btn ghost" href="https://github.com/strobes-co/strobes-agents-cli">Source</a>
+            <span class="sub">A G E N T S   A I  ·  v0.2.0</span></pre>
+      <span class="tl"><span class="tgreen">✔ authenticated</span> <span class="tdim">· tenant: acme · app.strobes.co</span></span>
+      <span class="tl"> </span>
+      <span class="tl"><span class="tcyan">◆ orchestrator</span></span>
+      <span class="tl">  Scanning the target and validating exposures…</span>
+      <span class="tl"><span class="tgreen">⏺ execute_command</span> <span class="tdim">(nmap -sV target.tld)</span></span>
+      <span class="tl"><span class="tdim">⎿ 22/tcp ssh · 443/tcp https · 8080/tcp http-proxy</span></span>
+      <span class="tl"><span class="tgreen">⏺ browser_navigate</span> <span class="tdim">(https://target.tld/login)</span></span>
+      <span class="tl"><span class="tdim">⎿ "Login — target.tld"</span></span>
+      <span class="tl"> </span>
+      <span class="tl"><span class="tmag">◐ running…</span>   <span class="tcyan">◈ 0.04 cr · 1.8k</span>   <span class="tylw">⛁ 0.31 cr</span>   <span class="tdim">⊞ Web App Pentest · ▷ Recon</span></span>
+      <span class="tl"><span class="tcyan">›</span> _<span class="cur"></span></span>
+    </div>
   </div>
-  <div class="badges">
-    <span class="badge">Rust · Ratatui</span>
-    <span class="badge">macOS · Linux · Windows</span>
-    <span class="badge">MasterKey auth</span>
-    <span class="badge">local shell + browser</span>
-    <span class="badge">auto-reconnect</span>
-    <span class="badge">self-update</span>
-  </div>
-</div></div>
+</div></div></div>
 
 <!-- WHAT -->
 <section><div class="wrap">
