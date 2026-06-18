@@ -90,7 +90,8 @@
   h3{color:var(--head);font-size:18px;margin:28px 0 8px}
   .muted{color:var(--dim)}
   p{margin:10px 0}
-  pre.code{position:relative;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--cyan);border-radius:10px;padding:14px 16px;overflow-x:auto;font-size:13.5px;color:var(--code);margin:12px 0}
+  pre.code{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:15px 16px;overflow-x:auto;font-size:13.5px;color:var(--code);margin:12px 0;transition:border-color .15s}
+  pre.code:hover{border-color:color-mix(in srgb,var(--cyan) 45%,var(--line))}
   pre.code .c{color:var(--dim)}
   pre.code .p{color:var(--green)}
   .copybtn{position:absolute;top:8px;right:8px;cursor:pointer;font-family:var(--sans);font-size:11.5px;font-weight:600;color:var(--dim);background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:3px 9px;opacity:.55;transition:opacity .15s,color .15s,border-color .15s}
