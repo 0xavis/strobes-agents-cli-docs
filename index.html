@@ -79,6 +79,16 @@
   .btn.ghost{background:transparent;color:var(--head);border:1px solid var(--line)}
   html[data-theme="light"] .btn.ghost{background:#fff;color:var(--navy);border-color:#c9d6e4}
   .btn.ghost:hover{border-color:var(--cyan);color:var(--cyan);filter:none}
+  .btn.beat{animation:beat 1.9s ease-in-out infinite;will-change:transform}
+  .btn.beat:hover{animation:none;transform:scale(1.05)}
+  @keyframes beat{
+    0%,100%{transform:scale(1);box-shadow:0 0 0 0 color-mix(in srgb,var(--cyan) 50%,transparent)}
+    18%{transform:scale(1.055)}
+    32%{transform:scale(1)}
+    46%{transform:scale(1.03)}
+    60%{transform:scale(1);box-shadow:0 0 0 12px color-mix(in srgb,var(--cyan) 0%,transparent)}
+  }
+  @media(prefers-reduced-motion:reduce){.btn.beat{animation:none}}
   .logo{height:24px;width:24px;border-radius:6px;vertical-align:middle}
   .logo-hero{height:40px;width:40px;border-radius:9px;box-shadow:0 4px 18px rgba(11,37,69,.18)}
   .btn.ghost{background:transparent;color:var(--txt);border:1px solid var(--line)}
@@ -167,7 +177,7 @@
     Ratatui UI, and run the <b>shell sandbox and browser on your own machine</b> — so the agent's tools operate
     on your real files and your real browser.</p>
     <div class="cta">
-      <a class="btn" href="#install">Install →</a>
+      <a class="btn beat" href="#install">Install →</a>
       <a class="btn ghost" href="https://github.com/strobes-co/strobes-agents-cli/releases/latest">Latest release</a>
       <a class="btn ghost" href="https://github.com/strobes-co/strobes-agents-cli">Source</a>
     </div>
